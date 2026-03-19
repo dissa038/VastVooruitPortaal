@@ -124,7 +124,8 @@ interface DocumentListProps {
 }
 
 export function DocumentList({ orderId, groupByCategory = true }: DocumentListProps) {
-  const documents = useQuery(api.documents.listByOrder, { orderId });
+  const isValidId = typeof orderId === "string" && orderId.length > 10;
+  const documents = useQuery(api.documents.listByOrder, isValidId ? { orderId } : "skip");
   const archiveDocument = useMutation(api.documents.archive);
 
   if (documents === undefined) {

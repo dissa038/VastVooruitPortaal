@@ -14,6 +14,16 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Modal } from "@/components/ui/modal";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // ============================================================================
 // Types & constants
@@ -268,6 +278,13 @@ export default function TimeEntriesPage() {
   // Week label
   const weekLabel = `${weekDays[0].toLocaleDateString("nl-NL", { day: "numeric", month: "long" })} - ${weekDays[6].toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}`;
 
+  // Create time entry modal state
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newDate, setNewDate] = useState(toDateString(new Date()));
+  const [newDuration, setNewDuration] = useState("60");
+  const [newWorkType, setNewWorkType] = useState<WorkType>("OPNAME");
+  const [newDescription, setNewDescription] = useState("");
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -278,7 +295,7 @@ export default function TimeEntriesPage() {
             Registreer en bekijk gewerkte uren
           </p>
         </div>
-        <Button className="shrink-0">
+        <Button className="shrink-0" onClick={() => setCreateOpen(true)}>
           <Plus className="size-4" />
           Tijd registreren
         </Button>
@@ -481,6 +498,71 @@ export default function TimeEntriesPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Create Time Entry Modal */}
+      <Modal
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Tijd registreren"
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Datum</Label>
+            <Input
+              type="date"
+              value={newDate}
+              onChange={(e) => setNewDate(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Duur (minuten)</Label>
+            <Input
+              type="number"
+              value={newDuration}
+              onChange={(e) => setNewDuration(e.target.value)}
+              min="15"
+              step="15"
+              placeholder="60"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Type werk</Label>
+            <Select value={newWorkType} onValueChange={(val) => setNewWorkType((val ?? "OPNAME") as WorkType)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(WORK_TYPE_CONFIG).map(([key, config]) => (
+                  <SelectItem key={key} value={key}>
+                    {config.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Beschrijving</Label>
+            <Input
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              placeholder="Optioneel..."
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={() => {
+              // TODO: call api.timeEntries.create when user is synced to Convex
+              setCreateOpen(false);
+              setNewDescription("");
+              setNewDuration("60");
+            }}>
+              Opslaan
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
