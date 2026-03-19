@@ -3,15 +3,7 @@
 import { useState, useMemo } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet";
+import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -291,17 +283,13 @@ export function NewOrderFlow() {
         Nieuwe opdracht
       </Button>
 
-      <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetContent side="right" className="sm:max-w-lg w-full overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Nieuwe opdracht</SheetTitle>
-            <SheetDescription>
-              Stap {currentStep + 1} van {steps.length}: {steps[currentStep]?.label}
-            </SheetDescription>
-          </SheetHeader>
-
-          {/* Step indicator */}
-          <div className="px-4">
+      <Modal
+        isOpen={open}
+        onClose={() => handleOpenChange(false)}
+        title={`Nieuwe opdracht — Stap ${currentStep + 1} van ${steps.length}: ${steps[currentStep]?.label}`}
+      >
+        {/* Step indicator */}
+        <div>
             <div className="flex items-center gap-0">
               {steps.map((step, idx) => (
                 <div key={step.id} className="flex items-center flex-1 min-w-0">
@@ -349,8 +337,8 @@ export function NewOrderFlow() {
             </div>
           </div>
 
-          {/* Step content */}
-          <div className="flex flex-col gap-4 px-4 min-h-[300px]">
+        {/* Step content */}
+        <div className="flex flex-col gap-4 min-h-[300px]">
             {/* STEP 1: Client Type */}
             {currentStep === 0 && (
               <div className="flex flex-col gap-3">
@@ -744,40 +732,37 @@ export function NewOrderFlow() {
             )}
           </div>
 
-          {/* Footer navigation */}
-          <SheetFooter>
-            <div className="flex w-full items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={currentStep === 0 ? () => setOpen(false) : handleBack}
-              >
-                {currentStep === 0 ? (
-                  "Annuleren"
-                ) : (
-                  <>
-                    <ChevronLeft className="size-4" />
-                    Vorige
-                  </>
-                )}
-              </Button>
+        {/* Footer navigation */}
+        <div className="flex w-full items-center justify-between pt-4">
+          <Button
+            variant="outline"
+            onClick={currentStep === 0 ? () => setOpen(false) : handleBack}
+          >
+            {currentStep === 0 ? (
+              "Annuleren"
+            ) : (
+              <>
+                <ChevronLeft className="size-4" />
+                Vorige
+              </>
+            )}
+          </Button>
 
-              {currentStep < steps.length - 1 ? (
-                <Button onClick={handleNext} disabled={!canGoNext()}>
-                  Volgende
-                  <ChevronRight className="size-4" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || !canGoNext()}
-                >
-                  {isSubmitting ? "Aanmaken..." : "Opdracht aanmaken"}
-                </Button>
-              )}
-            </div>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          {currentStep < steps.length - 1 ? (
+            <Button onClick={handleNext} disabled={!canGoNext()}>
+              Volgende
+              <ChevronRight className="size-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting || !canGoNext()}
+            >
+              {isSubmitting ? "Aanmaken..." : "Opdracht aanmaken"}
+            </Button>
+          )}
+        </div>
+      </Modal>
     </>
   );
 }

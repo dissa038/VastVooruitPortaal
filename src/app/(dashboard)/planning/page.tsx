@@ -15,16 +15,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
+import { Modal } from "@/components/ui/modal";
 import {
   StatusBadge,
   appointmentStatusVariants,
@@ -156,158 +147,153 @@ function NewAppointmentDialog() {
         <PlusIcon className="size-4" />
         Nieuwe afspraak
       </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Nieuwe afspraak inplannen</DialogTitle>
-            <DialogDescription>
-              Selecteer een opdracht, adviseur en tijdstip.
-            </DialogDescription>
-          </DialogHeader>
+      <Modal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title="Nieuwe afspraak inplannen"
+      >
+        <div className="flex flex-col gap-4">
+          {/* Order selection */}
+          <div className="flex flex-col gap-1.5">
+            <Label>Opdracht</Label>
+            <Select value={orderId} onValueChange={(v) => setOrderId(v ?? "")}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecteer opdracht..." />
+              </SelectTrigger>
+              <SelectContent>
+                {acceptedOrders?.map((order) => (
+                  <SelectItem key={order._id} value={order._id}>
+                    {order.referenceCode} — {order.addressLine}, {order.city}
+                  </SelectItem>
+                ))}
+                {(!acceptedOrders || acceptedOrders.length === 0) && (
+                  <SelectItem value="_none" disabled>
+                    Geen opdrachten beschikbaar
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <div className="flex flex-col gap-4">
-            {/* Order selection */}
+          {/* Date + time */}
+          <div className="grid grid-cols-3 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label>Opdracht</Label>
-              <Select value={orderId} onValueChange={(v) => setOrderId(v ?? "")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecteer opdracht..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {acceptedOrders?.map((order) => (
-                    <SelectItem key={order._id} value={order._id}>
-                      {order.referenceCode} — {order.addressLine}, {order.city}
-                    </SelectItem>
-                  ))}
-                  {(!acceptedOrders || acceptedOrders.length === 0) && (
-                    <SelectItem value="_none" disabled>
-                      Geen opdrachten beschikbaar
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="apt-date">Datum</Label>
+              <Input
+                id="apt-date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
             </div>
-
-            {/* Date + time */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="apt-date">Datum</Label>
-                <Input
-                  id="apt-date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="apt-start">Start</Label>
-                <Input
-                  id="apt-start"
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="apt-end">Einde</Label>
-                <Input
-                  id="apt-end"
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Adviseur selection with match scores */}
             <div className="flex flex-col gap-1.5">
-              <Label>Adviseur</Label>
-              {matchScores && matchScores.length > 0 ? (
-                <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                  {matchScores.map((score) => (
-                    <button
-                      key={score.userId}
-                      type="button"
-                      onClick={() => setAdviseurId(score.userId)}
-                      className={cn(
-                        "flex items-center justify-between rounded-lg border p-2.5 text-left transition-all text-sm",
-                        adviseurId === score.userId
-                          ? "border-[var(--color-vv-green)] bg-[var(--color-vv-green)]/5"
-                          : "hover:bg-muted/50"
-                      )}
-                    >
-                      <div className="flex items-center gap-2">
-                        <User className="size-4 text-muted-foreground" />
-                        <div>
-                          <span className="font-medium">
-                            {score.firstName} {score.lastName}
-                          </span>
-                          <span className="block text-xs text-muted-foreground">
-                            {score.homeCity ?? score.homePostcode}
-                            {!score.isAvailable && " — niet beschikbaar"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Star className="size-3.5 text-yellow-500" />
-                        <span
-                          className={cn(
-                            "text-xs font-semibold",
-                            score.totalScore >= 70
-                              ? "text-emerald-400"
-                              : score.totalScore >= 40
-                                ? "text-yellow-400"
-                                : "text-red-400"
-                          )}
-                        >
-                          {score.totalScore}%
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <Select value={adviseurId} onValueChange={(v) => setAdviseurId(v ?? "")}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecteer adviseur..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {adviseurs?.map((a) => (
-                      <SelectItem key={a.userId} value={a.userId}>
-                        {a.firstName} {a.lastName} — {a.homeCity}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <Label htmlFor="apt-start">Start</Label>
+              <Input
+                id="apt-start"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
             </div>
-
-            {/* Notes */}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="apt-notes">Notities</Label>
-              <textarea
-                id="apt-notes"
-                className="flex min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
-                placeholder="Eventuele opmerkingen..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+              <Label htmlFor="apt-end">Einde</Label>
+              <Input
+                id="apt-end"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Annuleren
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!orderId || !adviseurId || !date || isSubmitting}
-            >
-              {isSubmitting ? "Inplannen..." : "Afspraak inplannen"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {/* Adviseur selection with match scores */}
+          <div className="flex flex-col gap-1.5">
+            <Label>Adviseur</Label>
+            {matchScores && matchScores.length > 0 ? (
+              <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
+                {matchScores.map((score) => (
+                  <button
+                    key={score.userId}
+                    type="button"
+                    onClick={() => setAdviseurId(score.userId)}
+                    className={cn(
+                      "flex items-center justify-between rounded-lg border p-2.5 text-left transition-all text-sm",
+                      adviseurId === score.userId
+                        ? "border-[var(--color-vv-green)] bg-[var(--color-vv-green)]/5"
+                        : "hover:bg-muted/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <User className="size-4 text-muted-foreground" />
+                      <div>
+                        <span className="font-medium">
+                          {score.firstName} {score.lastName}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          {score.homeCity ?? score.homePostcode}
+                          {!score.isAvailable && " — niet beschikbaar"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Star className="size-3.5 text-yellow-500" />
+                      <span
+                        className={cn(
+                          "text-xs font-semibold",
+                          score.totalScore >= 70
+                            ? "text-emerald-400"
+                            : score.totalScore >= 40
+                              ? "text-yellow-400"
+                              : "text-red-400"
+                        )}
+                      >
+                        {score.totalScore}%
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <Select value={adviseurId} onValueChange={(v) => setAdviseurId(v ?? "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecteer adviseur..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {adviseurs?.map((a) => (
+                    <SelectItem key={a.userId} value={a.userId}>
+                      {a.firstName} {a.lastName} — {a.homeCity}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          {/* Notes */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="apt-notes">Notities</Label>
+            <textarea
+              id="apt-notes"
+              className="flex min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+              placeholder="Eventuele opmerkingen..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Annuleren
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!orderId || !adviseurId || !date || isSubmitting}
+          >
+            {isSubmitting ? "Inplannen..." : "Afspraak inplannen"}
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }

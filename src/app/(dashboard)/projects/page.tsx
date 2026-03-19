@@ -7,13 +7,7 @@ import { api } from "../../../../convex/_generated/api";
 import { Plus, Search, FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Modal } from "@/components/ui/modal";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -273,63 +267,59 @@ export default function ProjectsPage() {
         <EmptyState hasFilter={!!typeFilter || !!statusFilter || !!searchQuery} onCreateClick={() => setCreateOpen(true)} />
       )}
 
-      {/* Create Project Dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-[480px]">
-          <DialogHeader>
-            <DialogTitle>Nieuw project</DialogTitle>
-            <DialogDescription>
-              Maak een nieuw project aan voor een klant.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label>Naam *</Label>
-              <Input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Bijv. Woningcorporatie De Waard - Batch 2026"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Type</Label>
-              <Select value={newType} onValueChange={(val) => setNewType(val ?? "PARTICULIER")}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CORPORATIE">Corporatie</SelectItem>
-                  <SelectItem value="BELEGGER">Belegger</SelectItem>
-                  <SelectItem value="NIEUWBOUW">Nieuwbouw</SelectItem>
-                  <SelectItem value="PARTICULIER">Particulier</SelectItem>
-                  <SelectItem value="MAKELAAR">Makelaar</SelectItem>
-                  <SelectItem value="OVERIG">Overig</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Beschrijving</Label>
-              <Textarea
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                placeholder="Optionele omschrijving..."
-                rows={3}
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>
-                Annuleren
-              </Button>
-              <Button
-                onClick={handleCreate}
-                disabled={!newName.trim() || creating}
-              >
-                {creating ? "Aanmaken..." : "Project aanmaken"}
-              </Button>
-            </div>
+      {/* Create Project Modal */}
+      <Modal
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Nieuw project"
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Naam *</Label>
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Bijv. Woningcorporatie De Waard - Batch 2026"
+            />
           </div>
-        </DialogContent>
-      </Dialog>
+          <div className="space-y-1.5">
+            <Label>Type</Label>
+            <Select value={newType} onValueChange={(val) => setNewType(val ?? "PARTICULIER")}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CORPORATIE">Corporatie</SelectItem>
+                <SelectItem value="BELEGGER">Belegger</SelectItem>
+                <SelectItem value="NIEUWBOUW">Nieuwbouw</SelectItem>
+                <SelectItem value="PARTICULIER">Particulier</SelectItem>
+                <SelectItem value="MAKELAAR">Makelaar</SelectItem>
+                <SelectItem value="OVERIG">Overig</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Beschrijving</Label>
+            <Textarea
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              placeholder="Optionele omschrijving..."
+              rows={3}
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              Annuleren
+            </Button>
+            <Button
+              onClick={handleCreate}
+              disabled={!newName.trim() || creating}
+            >
+              {creating ? "Aanmaken..." : "Project aanmaken"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

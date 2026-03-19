@@ -15,14 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet";
+import { Modal } from "@/components/ui/modal";
 
 const TYPE_OPTIONS = [
   { value: "CORPORATIE", label: "Corporatie" },
@@ -192,20 +185,12 @@ export function CompanyForm({ open, onOpenChange, company }: CompanyFormProps) {
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>
-            {isEditing ? "Bedrijf bewerken" : "Nieuw bedrijf"}
-          </SheetTitle>
-          <SheetDescription>
-            {isEditing
-              ? "Pas de bedrijfsgegevens aan"
-              : "Vul de gegevens in om een nieuw bedrijf aan te maken"}
-          </SheetDescription>
-        </SheetHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4 px-4">
+    <Modal
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
+      title={isEditing ? "Bedrijf bewerken" : "Nieuw bedrijf"}
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div className="space-y-1.5">
             <Label htmlFor="name">Bedrijfsnaam *</Label>
@@ -406,17 +391,16 @@ export function CompanyForm({ open, onOpenChange, company }: CompanyFormProps) {
               rows={3}
             />
           </div>
-        </form>
+      </form>
 
-        <SheetFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuleren
-          </Button>
-          <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? "Opslaan..." : isEditing ? "Bijwerken" : "Aanmaken"}
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+      <div className="flex justify-end gap-2 pt-4">
+        <Button variant="outline" onClick={() => onOpenChange(false)}>
+          Annuleren
+        </Button>
+        <Button onClick={handleSubmit} disabled={saving}>
+          {saving ? "Opslaan..." : isEditing ? "Bijwerken" : "Aanmaken"}
+        </Button>
+      </div>
+    </Modal>
   );
 }

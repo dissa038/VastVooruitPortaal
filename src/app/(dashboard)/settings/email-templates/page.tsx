@@ -11,14 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Modal } from "@/components/ui/modal";
 import {
   ArrowLeftIcon,
   PlusIcon,
@@ -357,186 +350,175 @@ export default function EmailTemplatesPage() {
         </div>
       )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {editingId ? "Template bewerken" : "Nieuwe template"}
-            </DialogTitle>
-            <DialogDescription>
-              Gebruik {"{{placeholder}}"} syntax voor variabelen die automatisch worden ingevuld.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 max-h-[60vh] overflow-y-auto pr-1">
-            {/* Name + slug */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Naam</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => {
-                    const name = e.target.value;
-                    setForm((prev) => ({
-                      ...prev,
-                      name,
-                      ...(editingId ? {} : { slug: generateSlug(name) }),
-                    }));
-                  }}
-                  placeholder="Bijv. Bevestiging afspraak"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Slug</Label>
-                <Input
-                  value={form.slug}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, slug: e.target.value }))
-                  }
-                  placeholder="bijv. appointment-confirmed"
-                  className="font-mono"
-                />
-              </div>
-            </div>
-
-            {/* Trigger event */}
+      {/* Create/Edit Modal */}
+      <Modal
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        title={editingId ? "Template bewerken" : "Nieuwe template"}
+      >
+        <div className="grid gap-4 max-h-[60vh] overflow-y-auto pr-1">
+          {/* Name + slug */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Trigger event</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {Object.entries(TRIGGER_LABELS).map(([key, label]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() =>
-                      setForm((prev) => ({ ...prev, triggerEvent: key as TriggerEvent }))
-                    }
-                    className={`rounded-lg border px-2.5 py-1 text-xs transition-colors ${
-                      form.triggerEvent === key
-                        ? "border-[var(--color-vv-green)] bg-[var(--color-vv-green)]/10 text-[var(--color-vv-green)]"
-                        : "border-muted hover:border-foreground/20"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Subject */}
-            <div className="space-y-1.5">
-              <Label>Onderwerp</Label>
+              <Label>Naam</Label>
               <Input
-                value={form.subject}
+                value={form.name}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setForm((prev) => ({
+                    ...prev,
+                    name,
+                    ...(editingId ? {} : { slug: generateSlug(name) }),
+                  }));
+                }}
+                placeholder="Bijv. Bevestiging afspraak"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Slug</Label>
+              <Input
+                value={form.slug}
                 onChange={(e) =>
-                  setForm((prev) => ({ ...prev, subject: e.target.value }))
+                  setForm((prev) => ({ ...prev, slug: e.target.value }))
                 }
-                placeholder="Bijv. Bevestiging afspraak energielabel - {{adres}}"
+                placeholder="bijv. appointment-confirmed"
+                className="font-mono"
               />
-            </div>
-
-            {/* Body + placeholders */}
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="sm:col-span-2 space-y-1.5">
-                <Label>Inhoud</Label>
-                <Textarea
-                  value={form.body}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, body: e.target.value }))
-                  }
-                  placeholder="Typ hier de email inhoud met {{placeholders}}..."
-                  className="min-h-48 font-mono text-xs"
-                />
-              </div>
-              <div className="space-y-3">
-                <Label>Variabelen</Label>
-                <div className="space-y-3 text-xs">
-                  {AVAILABLE_PLACEHOLDERS.map((group) => (
-                    <div key={group.group}>
-                      <p className="font-medium text-muted-foreground mb-1">
-                        {group.group}
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {group.items.map((item) => (
-                          <button
-                            key={item}
-                            type="button"
-                            onClick={() => insertPlaceholder(item)}
-                            className="rounded border border-muted bg-muted/30 px-1.5 py-0.5 font-mono hover:bg-muted/60 transition-colors"
-                          >
-                            {`{{${item}}}`}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Active toggle */}
-            <div className="flex items-center gap-3">
-              <Switch
-                checked={form.isActive}
-                onCheckedChange={(checked) =>
-                  setForm((prev) => ({ ...prev, isActive: checked as boolean }))
-                }
-              />
-              <Label>Template is actief</Label>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() =>
-                handlePreview(form)
-              }
-            >
-              <EyeIcon className="size-4" />
-              Preview
-            </Button>
-            <Button onClick={handleSave} disabled={saving || !form.name || !form.slug}>
-              {saving ? "Opslaan..." : editingId ? "Opslaan" : "Aanmaken"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {/* Trigger event */}
+          <div className="space-y-1.5">
+            <Label>Trigger event</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {Object.entries(TRIGGER_LABELS).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() =>
+                    setForm((prev) => ({ ...prev, triggerEvent: key as TriggerEvent }))
+                  }
+                  className={`rounded-lg border px-2.5 py-1 text-xs transition-colors ${
+                    form.triggerEvent === key
+                      ? "border-[var(--color-vv-green)] bg-[var(--color-vv-green)]/10 text-[var(--color-vv-green)]"
+                      : "border-muted hover:border-foreground/20"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* Preview Dialog */}
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Template preview</DialogTitle>
-            <DialogDescription>
-              Voorbeeld met fictieve data
-            </DialogDescription>
-          </DialogHeader>
-          {previewTemplate && (
-            <div className="space-y-4">
-              <div className="rounded-lg border p-4 space-y-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">Onderwerp</p>
-                  <p className="text-sm font-medium">
-                    {renderPreview(previewTemplate.subject)}
-                  </p>
-                </div>
-                <div className="border-t pt-3">
-                  <p className="text-xs text-muted-foreground mb-2">Inhoud</p>
-                  <div className="whitespace-pre-wrap text-sm text-foreground">
-                    {renderPreview(previewTemplate.body)}
+          {/* Subject */}
+          <div className="space-y-1.5">
+            <Label>Onderwerp</Label>
+            <Input
+              value={form.subject}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, subject: e.target.value }))
+              }
+              placeholder="Bijv. Bevestiging afspraak energielabel - {{adres}}"
+            />
+          </div>
+
+          {/* Body + placeholders */}
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="sm:col-span-2 space-y-1.5">
+              <Label>Inhoud</Label>
+              <Textarea
+                value={form.body}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, body: e.target.value }))
+                }
+                placeholder="Typ hier de email inhoud met {{placeholders}}..."
+                className="min-h-48 font-mono text-xs"
+              />
+            </div>
+            <div className="space-y-3">
+              <Label>Variabelen</Label>
+              <div className="space-y-3 text-xs">
+                {AVAILABLE_PLACEHOLDERS.map((group) => (
+                  <div key={group.group}>
+                    <p className="font-medium text-muted-foreground mb-1">
+                      {group.group}
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {group.items.map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => insertPlaceholder(item)}
+                          className="rounded border border-muted bg-muted/30 px-1.5 py-0.5 font-mono hover:bg-muted/60 transition-colors"
+                        >
+                          {`{{${item}}}`}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Active toggle */}
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={form.isActive}
+              onCheckedChange={(checked) =>
+                setForm((prev) => ({ ...prev, isActive: checked as boolean }))
+              }
+            />
+            <Label>Template is actief</Label>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button
+            variant="outline"
+            onClick={() =>
+              handlePreview(form)
+            }
+          >
+            <EyeIcon className="size-4" />
+            Preview
+          </Button>
+          <Button onClick={handleSave} disabled={saving || !form.name || !form.slug}>
+            {saving ? "Opslaan..." : editingId ? "Opslaan" : "Aanmaken"}
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Preview Modal */}
+      <Modal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        title="Template preview"
+      >
+        {previewTemplate && (
+          <div className="space-y-4">
+            <div className="rounded-lg border p-4 space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Onderwerp</p>
+                <p className="text-sm font-medium">
+                  {renderPreview(previewTemplate.subject)}
+                </p>
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs text-muted-foreground mb-2">Inhoud</p>
+                <div className="whitespace-pre-wrap text-sm text-foreground">
+                  {renderPreview(previewTemplate.body)}
                 </div>
               </div>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPreview(false)}>
-              Sluiten
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        )}
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={() => setShowPreview(false)}>
+            Sluiten
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet";
+import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -130,27 +121,21 @@ export function OrderFormSheet({ children }: { children?: React.ReactElement }) 
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
-        render={
-          children ?? (
-            <Button>
-              <PlusIcon className="size-4" />
-              Nieuwe opdracht
-            </Button>
-          )
-        }
-      />
-      <SheetContent side="right" className="sm:max-w-lg w-full overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Nieuwe opdracht</SheetTitle>
-          <SheetDescription>
-            Vul de gegevens in voor een nieuwe opdracht. Het referentienummer wordt
-            automatisch gegenereerd.
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="flex flex-col gap-6 px-4">
+    <>
+      <div onClick={() => setOpen(true)}>
+        {children ?? (
+          <Button>
+            <PlusIcon className="size-4" />
+            Nieuwe opdracht
+          </Button>
+        )}
+      </div>
+      <Modal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title="Nieuwe opdracht"
+      >
+        <div className="flex flex-col gap-6">
           {/* Address section */}
           <div className="flex flex-col gap-4">
             <h3 className="text-sm font-medium text-foreground">Adres</h3>
@@ -299,18 +284,18 @@ export function OrderFormSheet({ children }: { children?: React.ReactElement }) 
           </div>
         </div>
 
-        <SheetFooter>
-          <SheetClose render={<Button variant="outline" />}>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={() => setOpen(false)}>
             Annuleren
-          </SheetClose>
+          </Button>
           <Button
             onClick={handleSubmit}
             disabled={!postcode || !houseNumber || isSubmitting}
           >
             {isSubmitting ? "Aanmaken..." : "Opdracht aanmaken"}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </div>
+      </Modal>
+    </>
   );
 }
