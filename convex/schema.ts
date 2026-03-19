@@ -368,6 +368,7 @@ export default defineSchema({
     intermediaryId: v.optional(v.id("intermediaries")),
     assignedAdviseurId: v.optional(v.id("users")),
     status: orderStatus,
+    clientType: v.optional(clientType),
     buildingType: v.optional(buildingType),
     deelgebied: v.optional(deelgebied),
     isNieuwbouw: v.boolean(),
@@ -423,6 +424,7 @@ export default defineSchema({
     .index("by_scheduledDate", ["scheduledDate"])
     .index("by_status_and_assignedAdviseurId", ["status", "assignedAdviseurId"])
     .index("by_isArchived_and_status", ["isArchived", "status"])
+    .index("by_clientType", ["clientType"])
     .searchIndex("search_orders", {
       searchField: "referenceCode",
       filterFields: ["status", "projectId", "assignedAdviseurId", "companyId"],

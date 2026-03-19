@@ -17,6 +17,13 @@ export const listByOrder = query({
   },
 });
 
+export const getUrl = query({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId);
+  },
+});
+
 export const listByDossier = query({
   args: { dossierId: v.id("dossiers") },
   handler: async (ctx, args) => {

@@ -150,3 +150,186 @@ export const updateStatus = mutation({
     await ctx.db.patch(args.id, updates);
   },
 });
+
+// ============================================================================
+// PUBLIC FUNCTIONS (no auth required)
+// ============================================================================
+
+/** Public query — returns quote + line items for the public acceptance page */
+export const getPublicById = query({
+  args: { id: v.id("quotes") },
+  handler: async (ctx, args) => {
+    const quote = await ctx.db.get(args.id);
+    if (!quote || quote.isArchived) return null;
+
+    const lineItems = await ctx.db
+      .query("quoteLineItems")
+      .withIndex("by_quoteId", (q) => q.eq("quoteId", args.id))
+      .collect();
+
+    const company = quote.companyId
+      ? await ctx.db.get(quote.companyId)
+      : null;
+    const contact = quote.contactId
+      ? await ctx.db.get(quote.contactId)
+      : null;
+
+    // Return only fields needed for public display
+    return {
+      _id: quote._id,
+      referenceCode: quote.referenceCode,
+      status: quote.status,
+      title: quote.title,
+      introText: quote.introText,
+      conditions: quote.conditions,
+      totalExVat: quote.totalExVat,
+      totalInclVat: quote.totalInclVat,
+      vatAmount: quote.vatAmount,
+      sentAt: quote.sentAt,
+      validUntil: quote.validUntil,
+      acceptedAt: quote.acceptedAt,
+      rejectedAt: quote.rejectedAt,
+      signedByName: quote.signedByName,
+      lineItems: lineItems.map((li) => ({
+        _id: li._id,
+        description: li.description,
+        quantity: li.quantity,
+        unitPriceExVat: li.unitPriceExVat,
+        totalExVat: li.totalExVat,
+        vatPercentage: li.vatPercentage,
+        sortOrder: li.sortOrder,
+      })),
+      companyName: company?.name ?? null,
+      contactName: contact
+        ? [contact.firstName, contact.lastName].filter(Boolean).join(" ")
+        : null,
+      contactEmail: contact?.email ?? null,
+    };
+  },
+});
+
+/** Accept a quote — sets status, stores signature, creates project */
+export const acceptQuote = mutation({
+  args: {
+    id: v.id("quotes"),
+    signedByName: v.string(),
+    signatureStorageId: v.optional(v.id("_storage")),
+  },
+  handler: async (ctx, args) => {
+    const quote = await ctx.db.get(args.id);
+    if (!quote) throw new Error("Offerte niet gevonden");
+
+    if (quote.status === "GEACCEPTEERD") {
+      throw new Error("Deze offerte is al geaccepteerd");
+    }
+    if (quote.status === "AFGEWEZEN") {
+      throw new Error("Deze offerte is afgewezen en kan niet meer geaccepteerd worden");
+    }
+
+    const now = new Date().toISOString();
+
+    // Update quote status
+    await ctx.db.patch(args.id, {
+      status: "GEACCEPTEERD",
+      acceptedAt: now,
+      signedByName: args.signedByName,
+      signedAt: now,
+      signatureStorageId: args.signatureStorageId,
+    });
+
+    // Create project from quote
+    const year = new Date().getFullYear();
+    const yearSuffix = String(year).slice(-2);
+    const codePrefix = `OVE-${yearSuffix}-`;
+
+    const existingProjects = await ctx.db
+      .query("projects")
+      .withIndex("by_referenceCode")
+      .take(500);
+
+    let maxNumber = 0;
+    for (const project of existingProjects) {
+      if (project.referenceCode && project.referenceCode.startsWith(codePrefix)) {
+        const numPart = parseInt(project.referenceCode.slice(codePrefix.length), 10);
+        if (numPart > maxNumber) maxNumber = numPart;
+      }
+    }
+    const referenceCode = `${codePrefix}${String(maxNumber + 1).padStart(3, "0")}`;
+
+    const projectId = await ctx.db.insert("projects", {
+      name: quote.title ?? `Project ${quote.referenceCode}`,
+      referenceCode,
+      companyId: quote.companyId,
+      contactId: quote.contactId,
+      intermediaryId: quote.intermediaryId,
+      type: "OVERIG",
+      status: "ACTIEF",
+      description: `Automatisch aangemaakt vanuit geaccepteerde offerte ${quote.referenceCode}`,
+      quoteId: args.id,
+      startDate: now,
+      totalOrders: 0,
+      completedOrders: 0,
+      isArchived: false,
+    });
+
+    // Link quote to project
+    await ctx.db.patch(args.id, { projectId });
+
+    // Log activity
+    await ctx.db.insert("activityLog", {
+      entityType: "QUOTE",
+      entityId: args.id,
+      action: "STATUS_CHANGED",
+      description: `Offerte ${quote.referenceCode} geaccepteerd door ${args.signedByName}. Project ${referenceCode} aangemaakt.`,
+      timestamp: now,
+    });
+
+    return { projectId, referenceCode };
+  },
+});
+
+/** Reject a quote with optional reason */
+export const rejectQuote = mutation({
+  args: {
+    id: v.id("quotes"),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const quote = await ctx.db.get(args.id);
+    if (!quote) throw new Error("Offerte niet gevonden");
+
+    if (quote.status === "GEACCEPTEERD") {
+      throw new Error("Deze offerte is al geaccepteerd en kan niet meer afgewezen worden");
+    }
+    if (quote.status === "AFGEWEZEN") {
+      throw new Error("Deze offerte is al afgewezen");
+    }
+
+    const now = new Date().toISOString();
+
+    await ctx.db.patch(args.id, {
+      status: "AFGEWEZEN",
+      rejectedAt: now,
+      notes: args.reason
+        ? `${quote.notes ? quote.notes + "\n" : ""}Afwijzingsreden: ${args.reason}`
+        : quote.notes,
+    });
+
+    // Log activity
+    await ctx.db.insert("activityLog", {
+      entityType: "QUOTE",
+      entityId: args.id,
+      action: "REJECTED",
+      description: `Offerte ${quote.referenceCode} afgewezen.${args.reason ? ` Reden: ${args.reason}` : ""}`,
+      timestamp: now,
+    });
+  },
+});
+
+/** Generate upload URL for signature image */
+export const generateSignatureUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});

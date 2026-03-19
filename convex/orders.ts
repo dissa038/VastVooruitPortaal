@@ -1,6 +1,11 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import {
+  getInitialStatus,
+  canSkipOfferte,
+  type ClientType,
+} from "./clientFlows";
 
 // ============================================================================
 // QUERIES
@@ -199,6 +204,16 @@ export const getStats = query({
 export const create = mutation({
   args: {
     addressId: v.id("addresses"),
+    clientType: v.optional(
+      v.union(
+        v.literal("PARTICULIER"),
+        v.literal("MAKELAAR"),
+        v.literal("BELEGGER"),
+        v.literal("CORPORATIE"),
+        v.literal("AANNEMER"),
+        v.literal("OVERIG"),
+      )
+    ),
     projectId: v.optional(v.id("projects")),
     companyId: v.optional(v.id("companies")),
     contactId: v.optional(v.id("contacts")),
@@ -237,16 +252,21 @@ export const create = mutation({
     const nextNumber = maxNumber + 1;
     const referenceCode = `${prefix}${String(nextNumber).padStart(5, "0")}`;
 
+    // Determine initial status based on client flow
+    const ct = (args.clientType ?? "PARTICULIER") as ClientType;
+    const initialStatus = getInitialStatus(ct, args.totalPriceExVat);
+
     const orderId = await ctx.db.insert("orders", {
       referenceCode,
       addressId: args.addressId,
+      clientType: args.clientType as any,
       projectId: args.projectId,
       companyId: args.companyId,
       contactId: args.contactId,
       bewonerId: args.bewonerId,
       intermediaryId: args.intermediaryId,
       assignedAdviseurId: args.assignedAdviseurId,
-      status: "NIEUW",
+      status: initialStatus as any,
       buildingType: args.buildingType as any,
       deelgebied: args.deelgebied as any,
       isNieuwbouw: args.isNieuwbouw ?? false,
@@ -274,10 +294,10 @@ export const create = mutation({
     // Create initial status history entry
     await ctx.db.insert("statusHistory", {
       orderId,
-      newStatus: "NIEUW",
+      newStatus: initialStatus,
       changedByUserId: user._id,
       changedAt: new Date().toISOString(),
-      reason: "Opdracht aangemaakt",
+      reason: `Opdracht aangemaakt (${ct} flow)`,
     });
 
     return orderId;

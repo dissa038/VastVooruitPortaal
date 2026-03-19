@@ -159,6 +159,16 @@ export const productTypeLabels: Record<string, string> = {
   MAATWERK: "Maatwerk",
 };
 
+/** Dutch labels for client types */
+export const clientTypeLabels: Record<string, string> = {
+  PARTICULIER: "Particulier",
+  MAKELAAR: "Makelaar",
+  BELEGGER: "Belegger",
+  CORPORATIE: "Corporatie",
+  AANNEMER: "Aannemer",
+  OVERIG: "Overig",
+};
+
 /** Dutch labels for work types (time entries) */
 export const workTypeLabels: Record<string, string> = {
   OPNAME: "Opname",

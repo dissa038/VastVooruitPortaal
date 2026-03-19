@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -100,10 +101,12 @@ export default function SettingsPage() {
               <CreditCard className="h-4 w-4" />
               Prijsregels beheren
             </Button>
-            <Button variant="outline" className="w-full justify-start gap-2">
-              <FileText className="h-4 w-4" />
-              Email-templates beheren
-            </Button>
+            <Link href="/settings/email-templates" className="block">
+              <Button variant="outline" className="w-full justify-start gap-2">
+                <FileText className="h-4 w-4" />
+                Email-templates beheren
+              </Button>
+            </Link>
             <Button variant="outline" className="w-full justify-start gap-2">
               <FileText className="h-4 w-4" />
               Checklist-templates beheren

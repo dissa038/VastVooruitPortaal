@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  HardHat,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
@@ -49,6 +50,7 @@ const entityColors = {
   planning: "#6366f1",
   timeEntries: "#ec4899",
   communications: "#14b8a6",
+  nieuwbouw: "#0ea5e9",
   settings: "#6b7280",
 } as const;
 
@@ -106,6 +108,8 @@ const planningGroup: NavGroup = {
   color: entityColors.planning,
   items: [
     { id: "planning", href: "/planning", icon: CalendarDays, label: "Planning", color: entityColors.planning },
+    { id: "adviseurs", href: "/planning/adviseurs", icon: UserCheck, label: "Adviseurs", color: entityColors.planning },
+    { id: "nieuwbouw", href: "/nieuwbouw", icon: HardHat, label: "Nieuwbouw", color: entityColors.nieuwbouw },
     { id: "time-entries", href: "/time-entries", icon: Clock, label: "Uurregistratie", color: entityColors.timeEntries },
     { id: "communications", href: "/communications", icon: Send, label: "Communicatie", color: entityColors.communications },
   ],

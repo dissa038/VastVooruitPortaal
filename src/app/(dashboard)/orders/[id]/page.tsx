@@ -11,6 +11,8 @@ import {
   StatusPipeline,
   getNextStatus,
 } from "@/components/orders/status-pipeline";
+import { DocumentUpload } from "@/components/documents/document-upload";
+import { DocumentList } from "@/components/documents/document-list";
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -496,50 +498,23 @@ export default function OrderDetailPage({
 
         {/* Right: Dossier (1 col) */}
         <div className="flex flex-col gap-6">
+          {/* Document upload */}
           <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle>Dossier</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // TODO: File upload
-                  console.log("Upload document");
-                }}
-              >
-                <UploadIcon className="size-3.5" />
-                Uploaden
-              </Button>
+            <CardHeader>
+              <CardTitle>Document uploaden</CardTitle>
             </CardHeader>
             <CardContent>
-              {order.documents.length > 0 ? (
-                <div className="flex flex-col gap-2">
-                  {order.documents.map((doc) => (
-                    <div
-                      key={doc._id}
-                      className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3 hover:bg-muted/50 transition-colors cursor-pointer"
-                    >
-                      <FileTextIcon className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="text-sm font-medium truncate">
-                          {doc.fileName}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {getCategoryLabel(doc.category)} &middot;{" "}
-                          {formatDateTime(doc.uploadedAt)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2 py-8 text-center">
-                  <FileTextIcon className="size-8 text-muted-foreground/40" />
-                  <p className="text-sm text-muted-foreground">
-                    Nog geen documenten
-                  </p>
-                </div>
-              )}
+              <DocumentUpload orderId={order._id as never} />
+            </CardContent>
+          </Card>
+
+          {/* Document list */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Dossier</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DocumentList orderId={order._id as never} />
             </CardContent>
           </Card>
 

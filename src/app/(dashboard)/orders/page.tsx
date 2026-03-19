@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge, type OrderStatus } from "@/components/orders/status-badge";
-import { OrderFormSheet } from "@/components/orders/order-form";
+import { NewOrderFlow } from "@/components/orders/new-order-flow";
 import {
   SearchIcon,
   InboxIcon,
@@ -182,7 +182,7 @@ export default function OrdersPage() {
             Beheer en volg al je opdrachten
           </p>
         </div>
-        <OrderFormSheet />
+        <NewOrderFlow />
       </div>
 
       {/* Search + filters */}
@@ -350,7 +350,7 @@ function EmptyState({ hasFilter }: { hasFilter: boolean }) {
             : "Maak je eerste opdracht aan om te beginnen"}
         </p>
       </div>
-      {!hasFilter && <OrderFormSheet />}
+      {!hasFilter && <NewOrderFlow />}
     </div>
   );
 }
