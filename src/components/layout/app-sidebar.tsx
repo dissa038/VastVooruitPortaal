@@ -339,7 +339,7 @@ function SidebarNavContent({
   onNavigate?: () => void;
 }) {
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* Logo + brand */}
       <div className="h-14 flex items-center px-4 border-b border-sidebar-border shrink-0">
         <Link href="/" className="flex items-center gap-2.5" onClick={onNavigate}>
@@ -459,7 +459,7 @@ function SidebarNavContent({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
