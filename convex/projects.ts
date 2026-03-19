@@ -63,6 +63,57 @@ export const getById = query({
   },
 });
 
+export const getByIdWithDetails = query({
+  args: { id: v.id("projects") },
+  handler: async (ctx, args) => {
+    const project = await ctx.db.get(args.id);
+    if (!project) return null;
+
+    // Fetch linked company
+    const company = project.companyId
+      ? await ctx.db.get(project.companyId)
+      : null;
+
+    // Fetch linked contact
+    const contact = project.contactId
+      ? await ctx.db.get(project.contactId)
+      : null;
+
+    // Fetch orders for this project
+    const orders = await ctx.db
+      .query("orders")
+      .withIndex("by_projectId", (q) => q.eq("projectId", args.id))
+      .take(200);
+    const activeOrders = orders.filter((o) => !o.isArchived);
+
+    // Enrich orders with address data
+    const enrichedOrders = await Promise.all(
+      activeOrders.map(async (order) => {
+        const address = await ctx.db.get(order.addressId);
+        return {
+          _id: order._id,
+          referenceCode: order.referenceCode,
+          status: order.status,
+          scheduledDate: order.scheduledDate,
+          completedAt: order.completedAt,
+          address: address
+            ? `${address.street} ${address.houseNumber}${address.houseNumberAddition ? ` ${address.houseNumberAddition}` : ""}`
+            : "\u2014",
+          city: address?.city ?? "",
+          postcode: address?.postcode ?? "",
+        };
+      })
+    );
+
+    return {
+      ...project,
+      company,
+      contact,
+      orders: enrichedOrders,
+    };
+  },
+});
+
 // ============================================================================
 // MUTATIONS
 // ============================================================================

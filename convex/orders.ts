@@ -92,6 +92,58 @@ export const list = query({
   },
 });
 
+/** List orders enriched with address and adviseur data */
+export const listEnriched = query({
+  args: {
+    status: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let orders;
+    if (args.status) {
+      orders = await ctx.db
+        .query("orders")
+        .withIndex("by_isArchived_and_status", (q) =>
+          q.eq("isArchived", false).eq("status", args.status as never)
+        )
+        .take(50);
+    } else {
+      orders = await ctx.db
+        .query("orders")
+        .withIndex("by_isArchived_and_status", (q) =>
+          q.eq("isArchived", false)
+        )
+        .take(50);
+    }
+
+    // Enrich with address and adviseur
+    const enriched = await Promise.all(
+      orders.map(async (order) => {
+        const address = await ctx.db.get(order.addressId);
+        const adviseur = order.assignedAdviseurId
+          ? await ctx.db.get(order.assignedAdviseurId)
+          : null;
+        const company = order.companyId
+          ? await ctx.db.get(order.companyId)
+          : null;
+
+        return {
+          ...order,
+          addressLine: address
+            ? `${address.street} ${address.houseNumber}${address.houseNumberAddition ? ` ${address.houseNumberAddition}` : ""}`
+            : "—",
+          city: address?.city ?? "—",
+          adviseurName: adviseur
+            ? `${adviseur.firstName} ${adviseur.lastName}`
+            : "—",
+          companyName: company?.name ?? null,
+        };
+      })
+    );
+
+    return enriched;
+  },
+});
+
 export const getById = query({
   args: { id: v.id("orders") },
   handler: async (ctx, args) => {

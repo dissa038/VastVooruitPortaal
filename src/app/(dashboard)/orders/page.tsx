@@ -139,8 +139,8 @@ export default function OrdersPage() {
   const [activeFilter, setActiveFilter] = useState<OrderStatus | "ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Real Convex query — falls back to mock data while empty
-  const convexOrders = useQuery(api.orders.list, {
+  // Real Convex query with address + adviseur enrichment
+  const convexOrders = useQuery(api.orders.listEnriched, {
     status: activeFilter === "ALL" ? undefined : activeFilter,
   });
 
@@ -150,13 +150,13 @@ export default function OrdersPage() {
     ? convexOrders.map((o) => ({
         _id: o._id,
         referenceCode: o.referenceCode,
-        address: `${o.referenceCode}`, // Will be enriched with address data
-        city: "",
+        address: o.addressLine,
+        city: o.city,
         status: o.status as OrderStatus,
-        adviseur: "-",
+        adviseur: o.adviseurName,
         scheduledDate: o.scheduledDate ?? null,
         product: "Energielabel",
-        companyName: null,
+        companyName: o.companyName ?? null,
       }))
     : MOCK_ORDERS;
   const isLoading = convexOrders === undefined;
