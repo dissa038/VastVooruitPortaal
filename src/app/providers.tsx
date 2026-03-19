@@ -12,17 +12,7 @@ const convex = new ConvexReactClient(
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider
-      localization={nlNL}
-      appearance={{
-        variables: {
-          colorPrimary: "#14AF52",
-          colorBackground: "#0E2D2D",
-          colorText: "#EAE3DF",
-          borderRadius: "0.25rem",
-        },
-      }}
-    >
+    <ClerkProvider localization={nlNL}>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <TooltipProvider>{children}</TooltipProvider>
       </ConvexProviderWithClerk>
