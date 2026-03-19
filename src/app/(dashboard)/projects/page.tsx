@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Plus, Search, FolderKanban } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -126,13 +127,10 @@ export default function ProjectsPage() {
             Beheer projecten voor corporaties, beleggers en meer
           </p>
         </div>
-        <Link
-          href="/projects/new"
-          className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
-        >
+        <Button className="shrink-0 gap-2">
           <Plus className="h-4 w-4" />
           Nieuw project
-        </Link>
+        </Button>
       </div>
 
       {/* Filters */}
@@ -292,13 +290,10 @@ function EmptyState({ hasFilter }: { hasFilter: boolean }) {
         </p>
       </div>
       {!hasFilter && (
-        <Link
-          href="/projects/new"
-          className="inline-flex h-9 items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium shadow-xs transition-colors hover:bg-muted"
-        >
+        <Button variant="outline" className="gap-2">
           <Plus className="h-4 w-4" />
           Project aanmaken
-        </Link>
+        </Button>
       )}
     </div>
   );
