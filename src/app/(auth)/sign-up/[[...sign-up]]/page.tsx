@@ -94,10 +94,10 @@ export default function SignUpPage() {
       signUp.missingFields?.length === 0)
   ) {
     return (
-      <div className="w-full max-w-[420px] px-4">
-        <div className="rounded-[0.25rem] border border-[#2a5a5a] bg-[#163838] p-8">
+      <div className="w-full max-w-[400px]">
+        <div className="rounded-[0.25rem] border border-[#2a5a5a]/50 bg-[#163838]/50 p-8 backdrop-blur-sm">
           <div className="mb-6 flex flex-col items-center gap-3">
-            <Image src="/logo.png" alt="VastVooruit" width={48} height={48} className="h-12 w-auto" />
+            <Image src="/logo.png" alt="VastVooruit" width={40} height={40} className="h-10 w-auto lg:hidden" />
             <h1 className="text-xl font-semibold text-[#EAE3DF]">E-mail verifiëren</h1>
             <p className="text-center text-sm text-[#EAE3DF]/60">
               We hebben een verificatiecode gestuurd naar{" "}
