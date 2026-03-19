@@ -4,21 +4,47 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { StatStrip, StatStripSkeleton } from "@/components/ui/stat-strip";
 import {
   FolderOpen,
   Plus,
-  Clock,
-  Receipt,
-  CalendarDays,
-  TrendingUp,
   FileText,
   Users,
+  CalendarDays,
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
   const user = useQuery(api.users.getAuthUser);
   const orderStats = useQuery(api.orders.getStats);
+
+  const statsLoaded = orderStats !== undefined;
+
+  const statItems = statsLoaded
+    ? [
+        {
+          label: "Nieuwe opdrachten",
+          value: String(orderStats?.["NIEUW"] ?? 0),
+          valueColor: "text-blue-500",
+        },
+        {
+          label: "In uitwerking",
+          value: String(orderStats?.["IN_UITWERKING"] ?? 0),
+          valueColor: "text-purple-500",
+        },
+        {
+          label: "Openstaande facturen",
+          value: "\u2014",
+          valueColor: "text-orange-500",
+        },
+        {
+          label: "Vandaag ingepland",
+          value: String(orderStats?.["INGEPLAND"] ?? 0),
+          valueColor: "text-emerald-500",
+        },
+      ]
+    : [];
 
   return (
     <div className="space-y-6">
@@ -37,32 +63,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Strip */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Nieuwe opdrachten"
-          value={orderStats ? String(orderStats["NIEUW"] ?? 0) : "—"}
-          icon={FolderOpen}
-          color="bg-blue-500/20 text-blue-400"
-        />
-        <StatCard
-          label="In uitwerking"
-          value={orderStats ? String(orderStats["IN_UITWERKING"] ?? 0) : "—"}
-          icon={Clock}
-          color="bg-purple-500/20 text-purple-400"
-        />
-        <StatCard
-          label="Openstaande facturen"
-          value="—"
-          icon={Receipt}
-          color="bg-orange-500/20 text-orange-400"
-        />
-        <StatCard
-          label="Vandaag ingepland"
-          value={orderStats ? String(orderStats["INGEPLAND"] ?? 0) : "—"}
-          icon={CalendarDays}
-          color="bg-emerald-500/20 text-emerald-400"
-        />
-      </div>
+      {statsLoaded ? <StatStrip items={statItems} /> : <StatStripSkeleton />}
 
       {/* Quick Actions & Recent Activity */}
       <div className="grid gap-4 md:grid-cols-2">
@@ -72,19 +73,35 @@ export default function DashboardPage() {
               Snelle acties
             </h3>
             <div className="grid gap-2 sm:grid-cols-2">
-              <Button variant="outline" render={<Link href="/orders" />} className="justify-start gap-2">
+              <Button
+                variant="outline"
+                render={<Link href="/orders" />}
+                className="justify-start gap-2"
+              >
                 <FolderOpen className="h-4 w-4" />
                 Opdrachten
               </Button>
-              <Button variant="outline" render={<Link href="/quotes" />} className="justify-start gap-2">
+              <Button
+                variant="outline"
+                render={<Link href="/quotes" />}
+                className="justify-start gap-2"
+              >
                 <FileText className="h-4 w-4" />
                 Offertes
               </Button>
-              <Button variant="outline" render={<Link href="/contacts" />} className="justify-start gap-2">
+              <Button
+                variant="outline"
+                render={<Link href="/contacts" />}
+                className="justify-start gap-2"
+              >
                 <Users className="h-4 w-4" />
                 Contacten
               </Button>
-              <Button variant="outline" render={<Link href="/planning" />} className="justify-start gap-2">
+              <Button
+                variant="outline"
+                render={<Link href="/planning" />}
+                className="justify-start gap-2"
+              >
                 <CalendarDays className="h-4 w-4" />
                 Planning
               </Button>
@@ -101,7 +118,8 @@ export default function DashboardPage() {
               <div className="flex items-center gap-3 text-sm">
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">
-                  Geen recente activiteit — begin met het aanmaken van opdrachten.
+                  Geen recente activiteit — begin met het aanmaken van
+                  opdrachten.
                 </span>
               </div>
             </div>
@@ -109,36 +127,5 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  color,
-}: {
-  label: string;
-  value: string;
-  icon: typeof FolderOpen;
-  color: string;
-}) {
-  const [bgColor, textColor] = color.split(" ");
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center gap-3">
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-sm ${bgColor}`}
-          >
-            <Icon className={`h-5 w-5 ${textColor}`} />
-          </div>
-          <div>
-            <p className="text-2xl font-semibold">{value}</p>
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }

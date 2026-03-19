@@ -1,154 +1,559 @@
 "use client";
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
-import {
-  LayoutDashboard,
-  FolderOpen,
-  Users,
-  Building2,
-  FileText,
-  Receipt,
-  Clock,
-  CalendarDays,
-  BarChart3,
-  Settings,
-  Package,
-  UserCheck,
-  Send,
-} from "lucide-react";
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import {
+  LayoutDashboard,
+  FolderOpen,
+  Package,
+  Users,
+  Building2,
+  UserCheck,
+  FileText,
+  Receipt,
+  BarChart3,
+  CalendarDays,
+  Clock,
+  Send,
+  Settings,
+  ChevronRight,
+  Menu,
+  X,
+} from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
+import { cn } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 
-const mainNav = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard },
-  { label: "Opdrachten", href: "/orders", icon: FolderOpen },
-  { label: "Projecten", href: "/projects", icon: Package },
-  { label: "Contacten", href: "/contacts", icon: Users },
-  { label: "Bedrijven", href: "/companies", icon: Building2 },
-  { label: "Tussenpersonen", href: "/intermediaries", icon: UserCheck },
+// ============================================================
+// ENTITY COLORS
+// ============================================================
+
+const entityColors = {
+  dashboard: "#14AF52",
+  orders: "#f59e0b",
+  projects: "#8b5cf6",
+  contacts: "#3b82f6",
+  companies: "#a855f7",
+  intermediaries: "#06b6d4",
+  quotes: "#f97316",
+  invoices: "#10b981",
+  costMutations: "#ef4444",
+  planning: "#6366f1",
+  timeEntries: "#ec4899",
+  communications: "#14b8a6",
+  settings: "#6b7280",
+} as const;
+
+// ============================================================
+// NAV ITEMS
+// ============================================================
+
+interface NavItem {
+  id: string;
+  href: string;
+  icon: React.ElementType;
+  label: string;
+  color?: string;
+}
+
+interface NavGroup {
+  id: string;
+  icon: React.ElementType;
+  label: string;
+  color: string;
+  items: NavItem[];
+}
+
+// Primary nav — monochrome icons
+const primaryNav: NavItem[] = [
+  { id: "dashboard", href: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { id: "orders", href: "/orders", icon: FolderOpen, label: "Opdrachten" },
+  { id: "projects", href: "/projects", icon: Package, label: "Projecten" },
 ];
 
-const commercialNav = [
-  { label: "Offertes", href: "/quotes", icon: FileText },
-  { label: "Facturen", href: "/invoices", icon: Receipt },
-  { label: "Kostenmutaties", href: "/cost-mutations", icon: BarChart3 },
+// CRM section — colored entity icons
+const crmNav: NavItem[] = [
+  { id: "contacts", href: "/contacts", icon: Users, label: "Contacten", color: entityColors.contacts },
+  { id: "companies", href: "/companies", icon: Building2, label: "Bedrijven", color: entityColors.companies },
+  { id: "intermediaries", href: "/intermediaries", icon: UserCheck, label: "Tussenpersonen", color: entityColors.intermediaries },
 ];
 
-const planningNav = [
-  { label: "Planning", href: "/planning", icon: CalendarDays },
-  { label: "Uurregistratie", href: "/time-entries", icon: Clock },
-  { label: "Communicatie", href: "/communications", icon: Send },
-];
+// Collapsible groups
+const financienGroup: NavGroup = {
+  id: "financien",
+  icon: Receipt,
+  label: "Financien",
+  color: entityColors.invoices,
+  items: [
+    { id: "quotes", href: "/quotes", icon: FileText, label: "Offertes", color: entityColors.quotes },
+    { id: "invoices", href: "/invoices", icon: Receipt, label: "Facturen", color: entityColors.invoices },
+    { id: "cost-mutations", href: "/cost-mutations", icon: BarChart3, label: "Kostenmutaties", color: entityColors.costMutations },
+  ],
+};
 
-function NavSection({
-  items,
+const planningGroup: NavGroup = {
+  id: "planning-group",
+  icon: CalendarDays,
+  label: "Planning & Uitvoering",
+  color: entityColors.planning,
+  items: [
+    { id: "planning", href: "/planning", icon: CalendarDays, label: "Planning", color: entityColors.planning },
+    { id: "time-entries", href: "/time-entries", icon: Clock, label: "Uurregistratie", color: entityColors.timeEntries },
+    { id: "communications", href: "/communications", icon: Send, label: "Communicatie", color: entityColors.communications },
+  ],
+};
+
+// ============================================================
+// STORAGE HELPERS
+// ============================================================
+
+const EXPANDED_KEY = "vv-sidebar-groups-expanded";
+
+function getStoredExpanded(): Set<string> {
+  if (typeof window === "undefined") return new Set(["financien", "planning-group"]);
+  try {
+    const stored = localStorage.getItem(EXPANDED_KEY);
+    if (!stored) return new Set(["financien", "planning-group"]);
+    return new Set(JSON.parse(stored));
+  } catch {
+    return new Set(["financien", "planning-group"]);
+  }
+}
+
+function saveExpanded(expanded: Set<string>) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(EXPANDED_KEY, JSON.stringify([...expanded]));
+  } catch {
+    // Ignore
+  }
+}
+
+// ============================================================
+// HELPER: isActive
+// ============================================================
+
+function isRouteActive(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(href + "/");
+}
+
+// ============================================================
+// NAV LINK COMPONENT (monochrome — primary nav)
+// ============================================================
+
+function NavLink({
+  item,
   pathname,
+  onNavigate,
 }: {
-  items: typeof mainNav;
+  item: NavItem;
   pathname: string;
+  onNavigate?: () => void;
 }) {
+  const Icon = item.icon;
+  const active = isRouteActive(pathname, item.href);
+
   return (
-    <SidebarMenu>
-      {items.map((item) => (
-        <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton
-            render={<Link href={item.href} />}
-            isActive={
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href)
-            }
-          >
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
-    </SidebarMenu>
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      className={cn(
+        "relative flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] transition-colors duration-150",
+        active
+          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+      )}
+    >
+      {/* Active indicator — green left border */}
+      {active && (
+        <span
+          className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full"
+          style={{ backgroundColor: entityColors.dashboard }}
+        />
+      )}
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className="flex-1 truncate">{item.label}</span>
+    </Link>
   );
 }
 
-export function AppSidebar() {
-  const pathname = usePathname();
+// ============================================================
+// COLORED NAV LINK (CRM + sub-items)
+// ============================================================
+
+function ColoredNavLink({
+  item,
+  pathname,
+  onNavigate,
+  indented = false,
+}: {
+  item: NavItem;
+  pathname: string;
+  onNavigate?: () => void;
+  indented?: boolean;
+}) {
+  const Icon = item.icon;
+  const active = isRouteActive(pathname, item.href);
 
   return (
-    <Sidebar>
-      <SidebarHeader className="p-4">
-        <Link href="/" className="flex items-center gap-3">
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      className={cn(
+        "relative flex items-center gap-2.5 py-1.5 rounded-md text-[13px] transition-colors duration-150",
+        indented ? "px-3 ml-4" : "px-3",
+        active
+          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+      )}
+    >
+      {active && (
+        <span
+          className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full"
+          style={{ backgroundColor: entityColors.dashboard }}
+        />
+      )}
+      <span
+        className="h-5 w-5 rounded flex items-center justify-center shrink-0"
+        style={{ backgroundColor: item.color }}
+      >
+        <Icon className="h-3 w-3 text-white" />
+      </span>
+      <span className="flex-1 truncate">{item.label}</span>
+    </Link>
+  );
+}
+
+// ============================================================
+// COLLAPSIBLE GROUP
+// ============================================================
+
+function CollapsibleGroup({
+  group,
+  pathname,
+  isExpanded,
+  onToggle,
+  onNavigate,
+}: {
+  group: NavGroup;
+  pathname: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onNavigate?: () => void;
+}) {
+  const Icon = group.icon;
+  const hasActiveChild = group.items.some((item) =>
+    isRouteActive(pathname, item.href)
+  );
+
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        className={cn(
+          "relative w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] transition-colors duration-150",
+          hasActiveChild
+            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+        )}
+      >
+        {hasActiveChild && (
+          <span
+            className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full"
+            style={{ backgroundColor: entityColors.dashboard }}
+          />
+        )}
+        <span
+          className="h-5 w-5 rounded flex items-center justify-center shrink-0"
+          style={{ backgroundColor: group.color }}
+        >
+          <Icon className="h-3 w-3 text-white" />
+        </span>
+        <span className="flex-1 text-left truncate">{group.label}</span>
+        <ChevronRight
+          className={cn(
+            "h-3.5 w-3.5 transition-transform duration-200",
+            isExpanded && "rotate-90"
+          )}
+        />
+      </button>
+      {/* Animated collapsible content using grid-rows trick */}
+      <div
+        className={cn(
+          "grid transition-all duration-200 ease-out",
+          isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="pt-0.5 space-y-0.5">
+            {group.items.map((item) => (
+              <ColoredNavLink
+                key={item.id}
+                item={item}
+                pathname={pathname}
+                onNavigate={onNavigate}
+                indented
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// SECTION LABEL
+// ============================================================
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="px-3 pt-4 pb-1 text-[10px] font-semibold text-sidebar-foreground/40 uppercase tracking-wider">
+      {children}
+    </div>
+  );
+}
+
+// ============================================================
+// SIDEBAR CONTENT (shared between desktop & mobile)
+// ============================================================
+
+function SidebarNavContent({
+  pathname,
+  expandedGroups,
+  toggleGroup,
+  onNavigate,
+}: {
+  pathname: string;
+  expandedGroups: Set<string>;
+  toggleGroup: (id: string) => void;
+  onNavigate?: () => void;
+}) {
+  return (
+    <>
+      {/* Logo + brand */}
+      <div className="h-14 flex items-center px-4 border-b border-sidebar-border shrink-0">
+        <Link href="/" className="flex items-center gap-2.5" onClick={onNavigate}>
           <Image
             src="/logo.png"
             alt="VastVooruit"
-            width={32}
-            height={32}
+            width={28}
+            height={28}
             className="rounded-sm"
           />
-          <span className="text-lg font-semibold tracking-tight">
+          <span className="font-semibold text-base text-sidebar-foreground tracking-tight">
             VastVooruit
           </span>
         </Link>
-      </SidebarHeader>
+      </div>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Overzicht</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <NavSection items={mainNav} pathname={pathname} />
-          </SidebarGroupContent>
-        </SidebarGroup>
+      {/* Scrollable nav */}
+      <div className="flex-1 overflow-y-auto no-scrollbar px-2 py-3">
+        {/* Primary navigation — monochrome */}
+        <div className="space-y-0.5">
+          {primaryNav.map((item) => (
+            <NavLink
+              key={item.id}
+              item={item}
+              pathname={pathname}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </div>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Commercieel</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <NavSection items={commercialNav} pathname={pathname} />
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {/* CRM section */}
+        <SectionLabel>CRM</SectionLabel>
+        <div className="space-y-0.5">
+          {crmNav.map((item) => (
+            <ColoredNavLink
+              key={item.id}
+              item={item}
+              pathname={pathname}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </div>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Planning & Uitvoering</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <NavSection items={planningNav} pathname={pathname} />
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+        {/* Financien group */}
+        <SectionLabel>Financieel</SectionLabel>
+        <div className="space-y-0.5">
+          <CollapsibleGroup
+            group={financienGroup}
+            pathname={pathname}
+            isExpanded={expandedGroups.has(financienGroup.id)}
+            onToggle={() => toggleGroup(financienGroup.id)}
+            onNavigate={onNavigate}
+          />
+        </div>
 
-      <SidebarFooter className="p-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link href="/settings" />}
-              isActive={pathname.startsWith("/settings")}
+        {/* Planning & Uitvoering group */}
+        <SectionLabel>Uitvoering</SectionLabel>
+        <div className="space-y-0.5">
+          <CollapsibleGroup
+            group={planningGroup}
+            pathname={pathname}
+            isExpanded={expandedGroups.has(planningGroup.id)}
+            onToggle={() => toggleGroup(planningGroup.id)}
+            onNavigate={onNavigate}
+          />
+        </div>
+
+        {/* Organisation */}
+        <div className="mt-4 pt-3 border-t border-sidebar-border">
+          <SectionLabel>Organisatie</SectionLabel>
+          <div className="space-y-0.5">
+            <Link
+              href="/settings"
+              onClick={onNavigate}
+              className={cn(
+                "relative flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] transition-colors duration-150",
+                isRouteActive(pathname, "/settings")
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+              )}
             >
-              <Settings className="h-4 w-4" />
+              {isRouteActive(pathname, "/settings") && (
+                <span
+                  className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full"
+                  style={{ backgroundColor: entityColors.dashboard }}
+                />
+              )}
+              <span
+                className="h-5 w-5 rounded flex items-center justify-center shrink-0"
+                style={{ backgroundColor: entityColors.settings }}
+              >
+                <Settings className="h-3 w-3 text-white" />
+              </span>
               <span>Instellingen</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <div className="flex items-center gap-3 px-2 py-1.5">
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: "h-7 w-7",
-                  },
-                }}
-              />
-              <span className="text-sm text-muted-foreground">Account</span>
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* User section at bottom */}
+      <div className="p-3 border-t border-sidebar-border shrink-0">
+        <div className="flex items-center gap-2.5 px-1">
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: "h-8 w-8",
+              },
+            }}
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-medium text-sidebar-foreground truncate">
+              Account
+            </p>
+            <p className="text-[10px] text-sidebar-foreground/50 truncate">
+              Beheer je profiel
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ============================================================
+// MOBILE SIDEBAR TRIGGER (exported for layout header)
+// ============================================================
+
+export function MobileSidebarTrigger({
+  onClick,
+  className,
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "lg:hidden flex items-center justify-center h-9 w-9 rounded-md hover:bg-accent transition-colors",
+        className
+      )}
+      aria-label="Open menu"
+    >
+      <Menu className="h-5 w-5" />
+    </button>
+  );
+}
+
+// ============================================================
+// MAIN EXPORT: AppSidebar
+// ============================================================
+
+export function AppSidebar({
+  mobileOpen,
+  onMobileClose,
+}: {
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}) {
+  const pathname = usePathname();
+  const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(
+    () => new Set(["financien", "planning-group"])
+  );
+
+  // Load stored expanded state on mount
+  React.useEffect(() => {
+    setExpandedGroups(getStoredExpanded());
+  }, []);
+
+  const toggleGroup = React.useCallback((groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      saveExpanded(next);
+      return next;
+    });
+  }, []);
+
+  return (
+    <>
+      {/* Desktop sidebar — fixed, always visible on lg+ */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 bg-sidebar text-sidebar-foreground flex-col border-r border-sidebar-border">
+        <SidebarNavContent
+          pathname={pathname}
+          expandedGroups={expandedGroups}
+          toggleGroup={toggleGroup}
+        />
+      </aside>
+
+      {/* Mobile sidebar — Sheet overlay */}
+      <Sheet open={mobileOpen} onOpenChange={(open) => !open && onMobileClose()}>
+        <SheetContent
+          side="left"
+          showCloseButton={false}
+          className="w-72 p-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border"
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigatie</SheetTitle>
+            <SheetDescription>Hoofdmenu navigatie</SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col h-full">
+            <SidebarNavContent
+              pathname={pathname}
+              expandedGroups={expandedGroups}
+              toggleGroup={toggleGroup}
+              onNavigate={onMobileClose}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
