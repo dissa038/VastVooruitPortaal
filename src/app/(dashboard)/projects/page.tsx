@@ -7,6 +7,22 @@ import { api } from "../../../../convex/_generated/api";
 import { Plus, Search, FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilterPills } from "@/components/ui/filter-pills";
@@ -98,6 +114,32 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newType, setNewType] = useState("PARTICULIER");
+  const [newDescription, setNewDescription] = useState("");
+  const [creating, setCreating] = useState(false);
+  const createProject = useMutation(api.projects.create);
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    setCreating(true);
+    try {
+      await createProject({
+        name: newName.trim(),
+        type: newType as "CORPORATIE" | "BELEGGER" | "NIEUWBOUW" | "PARTICULIER" | "MAKELAAR" | "OVERIG",
+        description: newDescription.trim() || undefined,
+      });
+      setCreateOpen(false);
+      setNewName("");
+      setNewType("PARTICULIER");
+      setNewDescription("");
+    } catch {
+      // Error handling
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const projects = useQuery(api.projects.list, {
     type: typeFilter ?? undefined,
@@ -127,7 +169,7 @@ export default function ProjectsPage() {
             Beheer projecten voor corporaties, beleggers en meer
           </p>
         </div>
-        <Button className="shrink-0 gap-2">
+        <Button className="shrink-0 gap-2" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4" />
           Nieuw project
         </Button>
@@ -228,8 +270,66 @@ export default function ProjectsPage() {
           </Table>
         </div>
       ) : (
-        <EmptyState hasFilter={!!typeFilter || !!statusFilter || !!searchQuery} />
+        <EmptyState hasFilter={!!typeFilter || !!statusFilter || !!searchQuery} onCreateClick={() => setCreateOpen(true)} />
       )}
+
+      {/* Create Project Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Nieuw project</DialogTitle>
+            <DialogDescription>
+              Maak een nieuw project aan voor een klant.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label>Naam *</Label>
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Bijv. Woningcorporatie De Waard - Batch 2026"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={newType} onValueChange={(val) => setNewType(val ?? "PARTICULIER")}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CORPORATIE">Corporatie</SelectItem>
+                  <SelectItem value="BELEGGER">Belegger</SelectItem>
+                  <SelectItem value="NIEUWBOUW">Nieuwbouw</SelectItem>
+                  <SelectItem value="PARTICULIER">Particulier</SelectItem>
+                  <SelectItem value="MAKELAAR">Makelaar</SelectItem>
+                  <SelectItem value="OVERIG">Overig</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Beschrijving</Label>
+              <Textarea
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                placeholder="Optionele omschrijving..."
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>
+                Annuleren
+              </Button>
+              <Button
+                onClick={handleCreate}
+                disabled={!newName.trim() || creating}
+              >
+                {creating ? "Aanmaken..." : "Project aanmaken"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -273,7 +373,7 @@ function ProjectsTableSkeleton() {
 // Empty state
 // ============================================================================
 
-function EmptyState({ hasFilter }: { hasFilter: boolean }) {
+function EmptyState({ hasFilter, onCreateClick }: { hasFilter: boolean; onCreateClick?: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed bg-card/50 py-16">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -290,7 +390,7 @@ function EmptyState({ hasFilter }: { hasFilter: boolean }) {
         </p>
       </div>
       {!hasFilter && (
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2" onClick={onCreateClick}>
           <Plus className="h-4 w-4" />
           Project aanmaken
         </Button>
