@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { AppSidebar, MobileSidebarTrigger } from "@/components/layout/app-sidebar";
-import { UserButton } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
+import { LogOut } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -10,6 +11,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  const initials = user
+    ? `${(user.firstName?.[0] ?? "").toUpperCase()}${(user.lastName?.[0] ?? "").toUpperCase()}`
+    : "";
 
   return (
     <div className="h-dvh bg-background text-foreground overflow-hidden">
@@ -32,17 +39,26 @@ export default function DashboardLayout({
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Right side — user button on mobile (desktop has it in sidebar) */}
-          <div className="flex items-center gap-2">
-            <div className="lg:hidden">
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: "h-8 w-8",
-                  },
-                }}
+          {/* Right side — custom user avatar on mobile */}
+          <div className="flex items-center gap-2 lg:hidden">
+            {user?.imageUrl ? (
+              <img
+                src={user.imageUrl}
+                alt={user.firstName ?? ""}
+                className="h-8 w-8 rounded-full object-cover"
               />
-            </div>
+            ) : initials ? (
+              <div className="h-8 w-8 rounded-full bg-[#14AF52] flex items-center justify-center text-xs font-semibold text-white">
+                {initials}
+              </div>
+            ) : null}
+            <button
+              onClick={() => signOut({ redirectUrl: "/sign-in" })}
+              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent transition-colors text-muted-foreground"
+              aria-label="Uitloggen"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </header>
 

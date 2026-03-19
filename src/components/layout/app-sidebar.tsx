@@ -22,8 +22,10 @@ import {
   Menu,
   X,
   HardHat,
+  LogOut,
+  User,
 } from "lucide-react";
-import { UserButton } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -444,25 +446,89 @@ function SidebarNavContent({
       </div>
 
       {/* User section at bottom */}
-      <div className="p-3 border-t border-sidebar-border shrink-0">
-        <div className="flex items-center gap-2.5 px-1">
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-8 w-8",
-              },
-            }}
+      <UserSection onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// ============================================================
+// USER SECTION — Custom (no Clerk UserButton)
+// ============================================================
+
+function UserSection({ onNavigate }: { onNavigate?: () => void }) {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
+  const initials = user
+    ? `${(user.firstName?.[0] ?? "").toUpperCase()}${(user.lastName?.[0] ?? "").toUpperCase()}`
+    : "??";
+  const fullName = user
+    ? [user.firstName, user.lastName].filter(Boolean).join(" ")
+    : "Laden...";
+  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+
+  return (
+    <div className="p-3 border-t border-sidebar-border shrink-0 relative">
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        className="w-full flex items-center gap-2.5 px-1 py-1 rounded-md hover:bg-sidebar-accent/50 transition-colors"
+      >
+        {user?.imageUrl ? (
+          <img
+            src={user.imageUrl}
+            alt={fullName}
+            className="h-8 w-8 rounded-full object-cover"
           />
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-sidebar-foreground truncate">
-              Account
-            </p>
-            <p className="text-[10px] text-sidebar-foreground/50 truncate">
-              Beheer je profiel
-            </p>
+        ) : (
+          <div className="h-8 w-8 rounded-full bg-[#14AF52] flex items-center justify-center text-xs font-semibold text-white">
+            {initials}
           </div>
+        )}
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-[13px] font-medium text-sidebar-foreground truncate">
+            {fullName}
+          </p>
+          <p className="text-[10px] text-sidebar-foreground/50 truncate">
+            {email}
+          </p>
         </div>
-      </div>
+      </button>
+
+      {/* Dropdown menu */}
+      {menuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-50"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className="absolute bottom-full left-3 right-3 mb-1 z-50 rounded-md border border-sidebar-border bg-sidebar shadow-lg">
+            <div className="p-2 space-y-0.5">
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  onNavigate?.();
+                  window.open("/settings", "_self");
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
+              >
+                <User className="h-4 w-4" />
+                Account beheren
+              </button>
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  signOut({ redirectUrl: "/sign-in" });
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Uitloggen
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
