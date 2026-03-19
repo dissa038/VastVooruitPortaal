@@ -1,0 +1,21 @@
+{
+  "name": "VastVooruit Portaal",
+  "short_name": "VastVooruit",
+  "description": "Energielabel management platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0E2D2D",
+  "theme_color": "#14AF52",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
