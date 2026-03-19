@@ -66,8 +66,10 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof
 
 export default function NieuwbouwDetailPage() {
   const params = useParams();
-  const id = params.id as Id<"nieuwbouwProjects">;
-  const data = useQuery(api.nieuwbouw.getById, { id });
+  const rawId = params.id as string;
+  const isValidId = typeof rawId === "string" && rawId.length > 10 && !rawId.includes(" ");
+  const id = rawId as Id<"nieuwbouwProjects">;
+  const data = useQuery(api.nieuwbouw.getById, isValidId ? { id } : "skip");
   const updateStatus = useMutation(api.nieuwbouw.updateRequirementStatus);
   const generateToken = useMutation(api.nieuwbouw.generateAccessToken);
 
@@ -75,11 +77,11 @@ export default function NieuwbouwDetailPage() {
   const [rejectionReasonMap, setRejectionReasonMap] = useState<Record<string, string>>({});
   const [copiedToken, setCopiedToken] = useState(false);
 
-  if (data === undefined) {
+  if (isValidId && data === undefined) {
     return <DetailSkeleton />;
   }
 
-  if (data === null) {
+  if (!isValidId || !data) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16">
         <h2 className="text-lg font-medium">Project niet gevonden</h2>

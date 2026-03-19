@@ -60,11 +60,13 @@ export default function ContactDetailPage() {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
 
-  const contact = useQuery(api.contacts.getById, {
-    id: params.id as Id<"contacts">,
-  });
+  const rawId = params.id as string;
+  const isValidId = typeof rawId === "string" && rawId.length > 10 && !rawId.includes(" ");
+  const contactId = rawId as Id<"contacts">;
 
-  if (contact === undefined) {
+  const contact = useQuery(api.contacts.getById, isValidId ? { id: contactId } : "skip");
+
+  if (isValidId && contact === undefined) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
@@ -84,7 +86,7 @@ export default function ContactDetailPage() {
     );
   }
 
-  if (contact === null) {
+  if (!isValidId || !contact) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <p className="text-lg font-medium">Contact niet gevonden</p>

@@ -82,11 +82,13 @@ export default function CompanyDetailPage() {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
 
-  const company = useQuery(api.companies.getById, {
-    id: params.id as Id<"companies">,
-  });
+  const rawId = params.id as string;
+  const isValidId = typeof rawId === "string" && rawId.length > 10 && !rawId.includes(" ");
+  const companyId = rawId as Id<"companies">;
 
-  if (company === undefined) {
+  const company = useQuery(api.companies.getById, isValidId ? { id: companyId } : "skip");
+
+  if (isValidId && company === undefined) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-64" />
@@ -99,7 +101,7 @@ export default function CompanyDetailPage() {
     );
   }
 
-  if (company === null) {
+  if (!isValidId || !company) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <p className="text-lg font-medium">Bedrijf niet gevonden</p>

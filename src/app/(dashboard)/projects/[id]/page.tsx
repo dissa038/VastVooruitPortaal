@@ -122,18 +122,20 @@ const STATUS_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const projectId = params.id as Id<"projects">;
+  const rawId = params.id as string;
+  const isValidId = typeof rawId === "string" && rawId.length > 10 && !rawId.includes(" ");
+  const projectId = rawId as Id<"projects">;
 
-  const project = useQuery(api.projects.getByIdWithDetails, { id: projectId });
+  const project = useQuery(api.projects.getByIdWithDetails, isValidId ? { id: projectId } : "skip");
   const updateStatus = useMutation(api.projects.updateStatus);
 
   // Loading state
-  if (project === undefined) {
+  if (isValidId && project === undefined) {
     return <ProjectDetailSkeleton />;
   }
 
   // Not found
-  if (project === null) {
+  if (!isValidId || !project) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <p className="text-lg font-medium">Project niet gevonden</p>
