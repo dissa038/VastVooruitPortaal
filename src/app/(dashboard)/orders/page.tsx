@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-// import { useQuery } from "convex/react";
-// import { api } from "../../../../convex/_generated/api";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -139,10 +139,27 @@ export default function OrdersPage() {
   const [activeFilter, setActiveFilter] = useState<OrderStatus | "ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // TODO: Replace with real Convex query
-  // const orders = useQuery(api.orders.list, { status: activeFilter === "ALL" ? undefined : activeFilter });
-  const orders: MockOrder[] | undefined = MOCK_ORDERS;
-  const isLoading = false;
+  // Real Convex query — falls back to mock data while empty
+  const convexOrders = useQuery(api.orders.list, {
+    status: activeFilter === "ALL" ? undefined : activeFilter,
+  });
+
+  // Use real data if available, otherwise show mock data for demo
+  const hasRealData = convexOrders && convexOrders.length > 0;
+  const orders: MockOrder[] | undefined = hasRealData
+    ? convexOrders.map((o) => ({
+        _id: o._id,
+        referenceCode: o.referenceCode,
+        address: `${o.referenceCode}`, // Will be enriched with address data
+        city: "",
+        status: o.status as OrderStatus,
+        adviseur: "-",
+        scheduledDate: o.scheduledDate ?? null,
+        product: "Energielabel",
+        companyName: null,
+      }))
+    : MOCK_ORDERS;
+  const isLoading = convexOrders === undefined;
 
   const filteredOrders = orders?.filter((order) => {
     const matchesFilter =

@@ -18,6 +18,7 @@ import Link from "next/link";
 
 export default function DashboardPage() {
   const user = useQuery(api.users.getAuthUser);
+  const orderStats = useQuery(api.orders.getStats);
 
   return (
     <div className="space-y-6">
@@ -39,13 +40,13 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Nieuwe opdrachten"
-          value="—"
+          value={orderStats ? String(orderStats["NIEUW"] ?? 0) : "—"}
           icon={FolderOpen}
           color="bg-blue-500/20 text-blue-400"
         />
         <StatCard
           label="In uitwerking"
-          value="—"
+          value={orderStats ? String(orderStats["IN_UITWERKING"] ?? 0) : "—"}
           icon={Clock}
           color="bg-purple-500/20 text-purple-400"
         />
@@ -57,7 +58,7 @@ export default function DashboardPage() {
         />
         <StatCard
           label="Vandaag ingepland"
-          value="—"
+          value={orderStats ? String(orderStats["INGEPLAND"] ?? 0) : "—"}
           icon={CalendarDays}
           color="bg-emerald-500/20 text-emerald-400"
         />
