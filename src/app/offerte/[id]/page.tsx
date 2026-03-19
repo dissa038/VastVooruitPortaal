@@ -145,9 +145,16 @@ function clearCanvas(canvas: HTMLCanvasElement) {
 
 export default function OffertePage() {
   const params = useParams();
-  const quoteId = params.id as Id<"quotes">;
+  const rawId = params.id as string;
 
-  const quote = useQuery(api.quotes.getPublicById, { id: quoteId });
+  // Validate Convex ID format before querying
+  const isValidId = rawId && rawId.length > 10 && !rawId.includes(" ");
+  const quoteId = rawId as Id<"quotes">;
+
+  const quote = useQuery(
+    api.quotes.getPublicById,
+    isValidId ? { id: quoteId } : "skip"
+  );
   const acceptQuote = useMutation(api.quotes.acceptQuote);
   const rejectQuote = useMutation(api.quotes.rejectQuote);
   const generateUploadUrl = useMutation(api.quotes.generateSignatureUploadUrl);
@@ -167,7 +174,7 @@ export default function OffertePage() {
   const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Loading state
-  if (quote === undefined) {
+  if (isValidId && quote === undefined) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-[#0E2D2D]">
         <div className="animate-pulse text-[#EAE3DF]">Laden...</div>
@@ -175,8 +182,8 @@ export default function OffertePage() {
     );
   }
 
-  // Not found
-  if (quote === null) {
+  // Not found or invalid ID
+  if (!isValidId || quote === null) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center bg-[#0E2D2D] px-4 text-center">
         <Image
@@ -196,14 +203,16 @@ export default function OffertePage() {
     );
   }
 
-  const isAccepted = quote.status === "GEACCEPTEERD" || acceptResult !== null;
-  const isRejected = quote.status === "AFGEWEZEN" || rejected;
-  const isExpired = quote.status === "VERLOPEN";
+  // At this point quote is guaranteed to be defined (early returns above handle undefined/null)
+  const q = quote!;
+  const isAccepted = q.status === "GEACCEPTEERD" || acceptResult !== null;
+  const isRejected = q.status === "AFGEWEZEN" || rejected;
+  const isExpired = q.status === "VERLOPEN";
   const canRespond =
-    !isAccepted && !isRejected && !isExpired && quote.status !== "CONCEPT";
-  const needsSignature = quote.totalInclVat > 100000; // > 1000 EUR in cents
+    !isAccepted && !isRejected && !isExpired && q.status !== "CONCEPT";
+  const needsSignature = q.totalInclVat > 100000; // > 1000 EUR in cents
 
-  const sortedLineItems = [...quote.lineItems].sort(
+  const sortedLineItems = [...q.lineItems].sort(
     (a, b) => a.sortOrder - b.sortOrder
   );
 
@@ -298,7 +307,7 @@ export default function OffertePage() {
           Offerte geaccepteerd
         </h1>
         <p className="mt-2 text-sm text-[#EAE3DF]/60">
-          Bedankt! Uw offerte {quote.referenceCode} is geaccepteerd.
+          Bedankt! Uw offerte {q.referenceCode} is geaccepteerd.
         </p>
         <p className="mt-1 text-sm text-[#EAE3DF]/60">
           Projectreferentie: <span className="font-mono text-[#14AF52]">{acceptResult.referenceCode}</span>
@@ -328,7 +337,7 @@ export default function OffertePage() {
           Offerte afgewezen
         </h1>
         <p className="mt-2 text-sm text-[#EAE3DF]/60">
-          De offerte {quote.referenceCode} is afgewezen.
+          De offerte {q.referenceCode} is afgewezen.
         </p>
         <p className="mt-4 text-xs text-[#EAE3DF]/40">
           Heeft u vragen? Neem gerust contact met ons op.
@@ -351,7 +360,7 @@ export default function OffertePage() {
           />
           <h1 className="text-lg font-semibold text-[#EAE3DF]">Offerte</h1>
           <p className="mt-1 font-mono text-sm text-[#EAE3DF]/60">
-            {quote.referenceCode}
+            {q.referenceCode}
           </p>
         </div>
 
@@ -362,10 +371,10 @@ export default function OffertePage() {
             <p className="text-sm font-medium text-[#14AF52]">
               Deze offerte is geaccepteerd
             </p>
-            {quote.acceptedAt && (
+            {q.acceptedAt && (
               <p className="mt-1 text-xs text-[#EAE3DF]/40">
-                op {formatDate(quote.acceptedAt)}
-                {quote.signedByName && ` door ${quote.signedByName}`}
+                op {formatDate(q.acceptedAt)}
+                {q.signedByName && ` door ${q.signedByName}`}
               </p>
             )}
           </div>
@@ -377,9 +386,9 @@ export default function OffertePage() {
             <p className="text-sm font-medium text-red-400">
               Deze offerte is afgewezen
             </p>
-            {quote.rejectedAt && (
+            {q.rejectedAt && (
               <p className="mt-1 text-xs text-[#EAE3DF]/40">
-                op {formatDate(quote.rejectedAt)}
+                op {formatDate(q.rejectedAt)}
               </p>
             )}
           </div>
@@ -390,9 +399,9 @@ export default function OffertePage() {
             <p className="text-sm font-medium text-yellow-400">
               Deze offerte is verlopen
             </p>
-            {quote.validUntil && (
+            {q.validUntil && (
               <p className="mt-1 text-xs text-[#EAE3DF]/40">
-                Geldig tot {formatDate(quote.validUntil)}
+                Geldig tot {formatDate(q.validUntil)}
               </p>
             )}
           </div>
@@ -402,53 +411,53 @@ export default function OffertePage() {
         <div className="rounded-sm border border-[#EAE3DF]/10 bg-[#EAE3DF]/5 p-4 md:p-6">
           {/* Meta info */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-6">
-            {quote.companyName && (
+            {q.companyName && (
               <div>
                 <p className="text-xs text-[#EAE3DF]/40">Bedrijf</p>
-                <p className="text-sm text-[#EAE3DF]">{quote.companyName}</p>
+                <p className="text-sm text-[#EAE3DF]">{q.companyName}</p>
               </div>
             )}
-            {quote.contactName && (
+            {q.contactName && (
               <div>
                 <p className="text-xs text-[#EAE3DF]/40">Contactpersoon</p>
-                <p className="text-sm text-[#EAE3DF]">{quote.contactName}</p>
+                <p className="text-sm text-[#EAE3DF]">{q.contactName}</p>
               </div>
             )}
             <div>
               <p className="text-xs text-[#EAE3DF]/40">Referentie</p>
               <p className="text-sm font-mono text-[#EAE3DF]">
-                {quote.referenceCode}
+                {q.referenceCode}
               </p>
             </div>
-            {quote.sentAt && (
+            {q.sentAt && (
               <div>
                 <p className="text-xs text-[#EAE3DF]/40">Datum</p>
                 <p className="text-sm text-[#EAE3DF]">
-                  {formatDate(quote.sentAt)}
+                  {formatDate(q.sentAt)}
                 </p>
               </div>
             )}
-            {quote.validUntil && (
+            {q.validUntil && (
               <div>
                 <p className="text-xs text-[#EAE3DF]/40">Geldig tot</p>
                 <p className="text-sm text-[#EAE3DF]">
-                  {formatDate(quote.validUntil)}
+                  {formatDate(q.validUntil)}
                 </p>
               </div>
             )}
           </div>
 
           {/* Title */}
-          {quote.title && (
+          {q.title && (
             <h2 className="mb-4 text-base font-medium text-[#EAE3DF]">
-              {quote.title}
+              {q.title}
             </h2>
           )}
 
           {/* Intro text */}
-          {quote.introText && (
+          {q.introText && (
             <p className="mb-6 text-sm text-[#EAE3DF]/70 whitespace-pre-line">
-              {quote.introText}
+              {q.introText}
             </p>
           )}
 
@@ -498,32 +507,32 @@ export default function OffertePage() {
             <div className="flex justify-between text-sm">
               <span className="text-[#EAE3DF]/60">Subtotaal excl. BTW</span>
               <span className="text-[#EAE3DF]">
-                {formatEuro(quote.totalExVat)}
+                {formatEuro(q.totalExVat)}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-[#EAE3DF]/60">BTW (21%)</span>
               <span className="text-[#EAE3DF]">
-                {formatEuro(quote.vatAmount)}
+                {formatEuro(q.vatAmount)}
               </span>
             </div>
             <div className="flex justify-between text-base font-semibold pt-2 border-t border-[#EAE3DF]/10">
               <span className="text-[#EAE3DF]">Totaal incl. BTW</span>
               <span className="text-[#14AF52]">
-                {formatEuro(quote.totalInclVat)}
+                {formatEuro(q.totalInclVat)}
               </span>
             </div>
           </div>
         </div>
 
         {/* Conditions */}
-        {quote.conditions && (
+        {q.conditions && (
           <div className="mt-6 rounded-sm border border-[#EAE3DF]/10 bg-[#EAE3DF]/5 p-4 md:p-6">
             <h3 className="mb-2 text-sm font-medium text-[#EAE3DF]">
               Voorwaarden
             </h3>
             <p className="text-xs text-[#EAE3DF]/60 whitespace-pre-line leading-relaxed">
-              {quote.conditions}
+              {q.conditions}
             </p>
           </div>
         )}
