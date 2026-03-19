@@ -271,24 +271,26 @@ export default function TimeEntriesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Uurregistratie</h1>
           <p className="text-sm text-muted-foreground">
             Registreer en bekijk gewerkte uren
           </p>
         </div>
-        <Button>
+        <Button className="shrink-0">
           <Plus className="size-4" />
           Tijd registreren
         </Button>
       </div>
 
       <Tabs defaultValue="week">
-        <TabsList variant="line">
-          <TabsTrigger value="week">Weekoverzicht</TabsTrigger>
-          <TabsTrigger value="list">Lijstweergave</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto no-scrollbar">
+          <TabsList variant="line">
+            <TabsTrigger value="week">Weekoverzicht</TabsTrigger>
+            <TabsTrigger value="list">Lijstweergave</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Week View */}
         <TabsContent value="week">
@@ -323,8 +325,9 @@ export default function TimeEntriesPage() {
               )}
             </div>
 
-            {/* Week grid */}
-            <div className="grid grid-cols-7 gap-2">
+            {/* Week grid — horizontally scrollable on mobile */}
+            <div className="overflow-x-auto no-scrollbar -mx-1 px-1">
+            <div className="grid grid-cols-7 gap-2 min-w-[600px]">
               {weekDays.map((day) => {
                 const dateStr = toDateString(day);
                 const dayEntries = entriesByDate.get(dateStr) || [];
@@ -387,6 +390,7 @@ export default function TimeEntriesPage() {
                 );
               })}
             </div>
+            </div>
 
             {/* Week total */}
             <div className="flex justify-end">
@@ -410,7 +414,7 @@ export default function TimeEntriesPage() {
         {/* List View */}
         <TabsContent value="list">
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>

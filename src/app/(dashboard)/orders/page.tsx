@@ -223,7 +223,7 @@ export default function OrdersPage() {
       {isLoading ? (
         <OrdersTableSkeleton />
       ) : filteredOrders && filteredOrders.length > 0 ? (
-        <div className="rounded-lg border bg-card">
+        <div className="overflow-x-auto rounded-lg border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
@@ -288,7 +288,7 @@ export default function OrdersPage() {
 
 function OrdersTableSkeleton() {
   return (
-    <div className="rounded-lg border bg-card">
+    <div className="overflow-x-auto rounded-lg border bg-card">
       <Table>
         <TableHeader>
           <TableRow>

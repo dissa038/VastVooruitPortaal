@@ -167,7 +167,7 @@ function NavLink({
       href={item.href}
       onClick={onNavigate}
       className={cn(
-        "relative flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] transition-colors duration-150",
+        "relative flex items-center gap-2.5 px-3 py-1.5 min-h-[44px] rounded-md text-[13px] transition-colors duration-150",
         active
           ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
           : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
@@ -209,7 +209,7 @@ function ColoredNavLink({
       href={item.href}
       onClick={onNavigate}
       className={cn(
-        "relative flex items-center gap-2.5 py-1.5 rounded-md text-[13px] transition-colors duration-150",
+        "relative flex items-center gap-2.5 py-1.5 min-h-[44px] rounded-md text-[13px] transition-colors duration-150",
         indented ? "px-3 ml-4" : "px-3",
         active
           ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
@@ -260,7 +260,7 @@ function CollapsibleGroup({
       <button
         onClick={onToggle}
         className={cn(
-          "relative w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] transition-colors duration-150",
+          "relative w-full flex items-center gap-2.5 px-3 py-1.5 min-h-[44px] rounded-md text-[13px] transition-colors duration-150",
           hasActiveChild
             ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
             : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
@@ -415,7 +415,7 @@ function SidebarNavContent({
               href="/settings"
               onClick={onNavigate}
               className={cn(
-                "relative flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] transition-colors duration-150",
+                "relative flex items-center gap-2.5 px-3 py-1.5 min-h-[44px] rounded-md text-[13px] transition-colors duration-150",
                 isRouteActive(pathname, "/settings")
                   ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
@@ -478,7 +478,7 @@ export function MobileSidebarTrigger({
     <button
       onClick={onClick}
       className={cn(
-        "lg:hidden flex items-center justify-center h-9 w-9 rounded-md hover:bg-accent transition-colors",
+        "lg:hidden flex items-center justify-center h-11 w-11 rounded-md hover:bg-accent transition-colors",
         className
       )}
       aria-label="Open menu"

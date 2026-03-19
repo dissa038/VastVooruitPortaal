@@ -193,9 +193,9 @@ export default function PlanningPage() {
       </div>
 
       {/* Controls */}
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
         {/* Week navigation */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="icon-sm"
@@ -203,7 +203,7 @@ export default function PlanningPage() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-medium min-w-[240px] text-center">
+          <span className="flex-1 text-sm font-medium text-center sm:min-w-[240px] sm:flex-none">
             {weekLabel}
           </span>
           <Button
@@ -224,14 +224,15 @@ export default function PlanningPage() {
           )}
         </div>
 
-        {/* Adviseur filter */}
-        <div className="flex items-center gap-1.5">
+        {/* Adviseur filter — scrollable on mobile */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
           {ADVISEURS.map((name) => (
             <Button
               key={name}
               variant={selectedAdviseur === name ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedAdviseur(name)}
+              className="shrink-0"
             >
               {name}
             </Button>

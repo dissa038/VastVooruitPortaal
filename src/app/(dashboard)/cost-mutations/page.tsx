@@ -141,23 +141,25 @@ export default function CostMutationsPage() {
         defaultValue="ALLE"
         onValueChange={(value) => setStatusFilter(value as string)}
       >
-        <TabsList variant="line">
-          {STATUS_FILTERS.map((filter) => (
-            <TabsTrigger key={filter.value} value={filter.value}>
-              {filter.label}
-              {filter.value === "PENDING" && (
-                <span className="ml-1.5 inline-flex size-5 items-center justify-center rounded-full bg-amber-500/10 text-xs font-semibold text-amber-600 dark:text-amber-400">
-                  {mutations.filter((m) => m.status === "PENDING").length}
-                </span>
-              )}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="overflow-x-auto no-scrollbar">
+          <TabsList variant="line">
+            {STATUS_FILTERS.map((filter) => (
+              <TabsTrigger key={filter.value} value={filter.value}>
+                {filter.label}
+                {filter.value === "PENDING" && (
+                  <span className="ml-1.5 inline-flex size-5 items-center justify-center rounded-full bg-amber-500/10 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                    {mutations.filter((m) => m.status === "PENDING").length}
+                  </span>
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
       </Tabs>
 
       {/* Table */}
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

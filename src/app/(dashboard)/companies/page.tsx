@@ -58,14 +58,14 @@ export default function CompaniesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Bedrijven</h1>
           <p className="text-sm text-muted-foreground">
             Corporaties, makelaars, aannemers en andere bedrijven
           </p>
         </div>
-        <Button onClick={() => setFormOpen(true)}>
+        <Button onClick={() => setFormOpen(true)} className="shrink-0">
           <Plus className="h-4 w-4" data-icon="inline-start" />
           Nieuw bedrijf
         </Button>
@@ -103,7 +103,7 @@ export default function CompaniesPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border bg-card">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

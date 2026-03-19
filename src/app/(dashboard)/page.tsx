@@ -54,7 +54,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
@@ -64,7 +64,7 @@ export default function DashboardPage() {
         </div>
         <Link
           href="/orders"
-          className={cn(linkButtonBase, linkButtonDefault, "gap-2")}
+          className={cn(linkButtonBase, linkButtonDefault, "gap-2 shrink-0")}
         >
           <Plus className="h-4 w-4" />
           Nieuwe opdracht

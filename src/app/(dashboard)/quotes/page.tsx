@@ -116,14 +116,14 @@ export default function QuotesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Offertes</h1>
           <p className="text-sm text-muted-foreground">
             Beheer offertes en volg de status
           </p>
         </div>
-        <Button>
+        <Button className="shrink-0">
           <Plus className="size-4" />
           Nieuwe offerte
         </Button>
@@ -134,18 +134,20 @@ export default function QuotesPage() {
         defaultValue="ALLE"
         onValueChange={(value) => setStatusFilter(value as string)}
       >
-        <TabsList variant="line">
-          {STATUS_FILTERS.map((filter) => (
-            <TabsTrigger key={filter.value} value={filter.value}>
-              {filter.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="overflow-x-auto no-scrollbar">
+          <TabsList variant="line">
+            {STATUS_FILTERS.map((filter) => (
+              <TabsTrigger key={filter.value} value={filter.value}>
+                {filter.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
       </Tabs>
 
       {/* Table */}
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

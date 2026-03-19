@@ -56,14 +56,14 @@ export default function ContactsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Contacten</h1>
           <p className="text-sm text-muted-foreground">
             Beheer al je contactpersonen op een plek
           </p>
         </div>
-        <Button onClick={() => setFormOpen(true)}>
+        <Button onClick={() => setFormOpen(true)} className="shrink-0">
           <Plus className="h-4 w-4" data-icon="inline-start" />
           Nieuw contact
         </Button>
@@ -101,7 +101,7 @@ export default function ContactsPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border bg-card">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
