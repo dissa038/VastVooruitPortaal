@@ -3,7 +3,6 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { StatStrip, StatStripSkeleton } from "@/components/ui/stat-strip";
 import {
   FolderOpen,
@@ -14,6 +13,13 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+
+const linkButtonBase =
+  "inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors h-8 gap-1.5 px-2.5";
+const linkButtonDefault = "bg-primary text-primary-foreground hover:bg-primary/80";
+const linkButtonOutline =
+  "border border-border bg-background hover:bg-muted hover:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50";
 
 export default function DashboardPage() {
   const user = useQuery(api.users.getAuthUser);
@@ -56,10 +62,13 @@ export default function DashboardPage() {
             lopende opdrachten.
           </p>
         </div>
-        <Button render={<Link href="/orders" />} className="gap-2">
+        <Link
+          href="/orders"
+          className={cn(linkButtonBase, linkButtonDefault, "gap-2")}
+        >
           <Plus className="h-4 w-4" />
           Nieuwe opdracht
-        </Button>
+        </Link>
       </div>
 
       {/* KPI Strip */}
@@ -73,38 +82,34 @@ export default function DashboardPage() {
               Snelle acties
             </h3>
             <div className="grid gap-2 sm:grid-cols-2">
-              <Button
-                variant="outline"
-                render={<Link href="/orders" />}
-                className="justify-start gap-2"
+              <Link
+                href="/orders"
+                className={cn(linkButtonBase, linkButtonOutline, "justify-start gap-2")}
               >
                 <FolderOpen className="h-4 w-4" />
                 Opdrachten
-              </Button>
-              <Button
-                variant="outline"
-                render={<Link href="/quotes" />}
-                className="justify-start gap-2"
+              </Link>
+              <Link
+                href="/quotes"
+                className={cn(linkButtonBase, linkButtonOutline, "justify-start gap-2")}
               >
                 <FileText className="h-4 w-4" />
                 Offertes
-              </Button>
-              <Button
-                variant="outline"
-                render={<Link href="/contacts" />}
-                className="justify-start gap-2"
+              </Link>
+              <Link
+                href="/contacts"
+                className={cn(linkButtonBase, linkButtonOutline, "justify-start gap-2")}
               >
                 <Users className="h-4 w-4" />
                 Contacten
-              </Button>
-              <Button
-                variant="outline"
-                render={<Link href="/planning" />}
-                className="justify-start gap-2"
+              </Link>
+              <Link
+                href="/planning"
+                className={cn(linkButtonBase, linkButtonOutline, "justify-start gap-2")}
               >
                 <CalendarDays className="h-4 w-4" />
                 Planning
-              </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
